@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  arousal-processor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: arousal-processor
+    networks:
+      - custom_network
+    command: ["./build/bin/FaceLandmarkImg", "-aus"]
+
+networks:
+  custom_network:
+    external: true
