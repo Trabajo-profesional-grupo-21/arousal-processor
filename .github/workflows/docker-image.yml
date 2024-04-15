@@ -27,17 +27,11 @@ jobs:
       run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u tppg21 --password-stdin
       
     - name: Build the Docker image
-      run: docker build -t tppg21/arousal-processor:$(git rev-parse --short HEAD) .
+      run: docker build -t tppg21/arousal-processor:$(git rev-parse --short HEAD) ./docker/
 
     - name: Push Docker image
       run: docker push tppg21/arousal-processor:$(git rev-parse --short HEAD)
 
-  
-  deploy:
-
-    runs-on: ubuntu-latest
-    
-    steps:
     - name: Update deployment file
       run: TAG=$(git rev-parse --short HEAD) && sed -i 's|<IMAGE>|tppg21/arousal-processor:'${TAG}'|' $GITHUB_WORKSPACE/k8s.yaml
 
