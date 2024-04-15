@@ -65,7 +65,8 @@ RabbitCapture::RabbitCapture(){
 	latest_gray_frame = cv::Mat();
 
 	try {
-		connection = AmqpClient::Channel::Create(connection_name);
+		// connection = AmqpClient::Channel::Create(connection_name);
+		connection = AmqpClient::Channel::Create("moose.rmq.cloudamqp.com", 5672, "zacfsxvy", "zfCu8hS9snVGmySGhtvIVeMi6uvYssih", "zacfsxvy");
 
 		connection->DeclareExchange(exchange_name, AmqpClient::Channel::EXCHANGE_TYPE_FANOUT);
 
