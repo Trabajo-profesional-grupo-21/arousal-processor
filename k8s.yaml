@@ -21,6 +21,7 @@ spec:
       containers:
       - name: arousal-processor
         image: <IMAGE>
+        command: ["./build/bin/FaceLandmarkImg", "-aus"]
         imagePullPolicy: IfNotPresent
         resources:
           limits:
