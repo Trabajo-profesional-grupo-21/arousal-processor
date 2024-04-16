@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: arousal-processor
 spec:
-  replicas: 5
+  replicas: 3
   selector:
     matchLabels:
       app: arousal-processor
@@ -20,13 +20,12 @@ spec:
     spec:
       containers:
       - name: arousal-processor
-        image: tppg21/arousal-processor:4ffc49ad74ab4f767413a20798d1c58fd66770bc
+        image: <IMAGE>
         command: ["./build/bin/FaceLandmarkImg", "-aus"]
         imagePullPolicy: IfNotPresent
         resources:
           limits:
-            cpu: "2000m" # Límite máximo de uso de CPU
             memory: "1000Mi" # Límite máximo de uso de memoria
           requests:
-            cpu: "1000m" # Cantidad mínima de CPU requerida
-            memory: "1000Mi" # Cantidad mínima de memoria requerida
+            cpu: "500m" # Cantidad mínima de CPU requerida
+            memory: "500Mi" # Cantidad mínima de memoria requerida
