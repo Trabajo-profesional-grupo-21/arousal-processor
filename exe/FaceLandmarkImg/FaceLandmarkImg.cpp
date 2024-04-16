@@ -266,11 +266,11 @@ int main(int argc, char **argv)
 			
 			// calcular el arousal
 			double arousal = calculate_arousal(au_intensities);
-			std::cout << "arousal: " << arousal << std::endl;
+			// std::cout << "arousal: " << arousal << std::endl;
 			output_json["arousal"] = arousal;
 			
 			
-			std::cout << output_json.dump() << std::endl;
+			// std::cout << output_json.dump() << std::endl;
 				
 			rabbit_reader.ProcessReply(frame_id, output_json);
 

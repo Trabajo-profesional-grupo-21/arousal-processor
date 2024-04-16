@@ -20,13 +20,13 @@ spec:
     spec:
       containers:
       - name: arousal-processor
-        image: <IMAGE>
+        image: tppg21/arousal-processor:4ffc49ad74ab4f767413a20798d1c58fd66770bc
         command: ["./build/bin/FaceLandmarkImg", "-aus"]
         imagePullPolicy: IfNotPresent
         resources:
           limits:
-            cpu: "1000m" # Límite máximo de uso de CPU
+            cpu: "2000m" # Límite máximo de uso de CPU
             memory: "1000Mi" # Límite máximo de uso de memoria
           requests:
-            cpu: "500m" # Cantidad mínima de CPU requerida
-            memory: "500Mi" # Cantidad mínima de memoria requerida
+            cpu: "1000m" # Cantidad mínima de CPU requerida
+            memory: "1000Mi" # Cantidad mínima de memoria requerida
