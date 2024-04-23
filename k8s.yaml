@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: arousal-processor
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: arousal-processor
@@ -27,5 +27,5 @@ spec:
           limits:
             memory: "1000Mi" # Límite máximo de uso de memoria
           requests:
-            cpu: "500m" # Cantidad mínima de CPU requerida
+            cpu: "1000m" # Cantidad mínima de CPU requerida
             memory: "500Mi" # Cantidad mínima de memoria requerida
