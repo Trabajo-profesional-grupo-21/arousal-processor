@@ -65,7 +65,9 @@ RabbitCapture::RabbitCapture(){
 	latest_gray_frame = cv::Mat();
 
 	try {
-		connection = AmqpClient::Channel::Create(connection_name);
+		// connection = AmqpClient::Channel::Create(connection_name);
+		// connection = AmqpClient::Channel::Create("rabbitmq-0.rabbitmq.default.svc.cluster.local", 5672);
+		connection = AmqpClient::Channel::Create("moose.rmq.cloudamqp.com", 5672, "zacfsxvy", "zfCu8hS9snVGmySGhtvIVeMi6uvYssih", "zacfsxvy");
 
 		connection->DeclareExchange(exchange_name, AmqpClient::Channel::EXCHANGE_TYPE_FANOUT);
 
@@ -155,8 +157,8 @@ void RabbitCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
 
 void RabbitCapture::ProcessReply(std::string frame_id, json img_processed){
 	current_replies[frame_id] = img_processed;
-	std::cout << "frame id " << frame_id << "info " << img_processed << std::endl;
-	std::cout << "Tamanio del current batch " << current_batch.size() << std::endl;
+	// std::cout << "frame id " << frame_id << "info " << img_processed << std::endl;
+	// std::cout << "Tamanio del current batch " << current_batch.size() << std::endl;
 	
 	if (current_batch.empty()){
 		json output_json;
@@ -188,13 +190,13 @@ Image RabbitCapture::GetNextImage()
 		current_batch_id = j["batch_id"];
 		current_batch = j["batch"];
 	}
-	std::cout << "Tamb dict antes de sacar un farme " << current_batch.size() << std::endl;
+	// std::cout << "Tamb dict antes de sacar un farme " << current_batch.size() << std::endl;
 	auto it = current_batch.begin();
 	std::string frame_id = it->first; 
-	std::cout << "frame que itero " << frame_id << std::endl;
+	// std::cout << "frame que itero " << frame_id << std::endl;
 	std::vector<uchar> image_data = it->second;     
     current_batch.erase(it->first);
-	std::cout << "Tamb dict despues de sacar uno frame " << current_batch.size() << std::endl;
+	// std::cout << "Tamb dict despues de sacar uno frame " << current_batch.size() << std::endl;
 
 
 	// std::vector<uchar> image_data = current_batch.front();

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arousal-processor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: arousal-processor
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: arousal-processor
+    spec:
+      containers:
+      - name: arousal-processor
+        image: <IMAGE>
+        command: ["./build/bin/FaceLandmarkImg", "-aus"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "1000Mi" # Límite máximo de uso de memoria
+          requests:
+            cpu: "1000m" # Cantidad mínima de CPU requerida
+            memory: "500Mi" # Cantidad mínima de memoria requerida
