@@ -62,8 +62,6 @@ std::string getEnvVar( std::string const & key ){
 RabbitCapture::RabbitCapture(){
 
 	std::string remote_rabbit = getEnvVar("REMOTE_RABBIT");
-
-
 	std::string queue_name = "arousal_frames";
 	std::string output_queue_name = "processed";
 	std::string exchange_name = "frames";
@@ -73,7 +71,7 @@ RabbitCapture::RabbitCapture(){
 
 	try {
 		if (remote_rabbit.length() > 0){
-			std::string host = getEnvVar("REMOTE_RABBIT");
+			std::string host = getEnvVar("RABBIT_HOST");
 			int port = std::stoi(getEnvVar("RABBIT_PORT"));
 			std::string user = getEnvVar("RABBIT_USER");
 			std::string password = getEnvVar("RABBIT_PASSWORD");
