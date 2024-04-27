@@ -115,6 +115,8 @@ namespace Utilities
 
 		bool has_bounding_boxes;
 
+		int batch_len;
+
 	private:
 
 		// Blocking copy and move, as it doesn't make sense to have several readers pointed at the same source
@@ -152,6 +154,7 @@ namespace Utilities
 		std::string current_user_id;
 		std::string current_batch_id;
 		std::map<std::string,json> current_replies;
+		std::vector<uchar> image_data;
 	};
 }
 #endif // RABBIT_CAPTURE_H

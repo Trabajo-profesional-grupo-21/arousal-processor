@@ -148,7 +148,6 @@ int main(int argc, char **argv)
 	cv::Mat rgb_image;
 
 	Utilities::Image img_info = rabbit_reader.GetNextImage();
-	std::string frame_id = img_info.frame_id;
 	rgb_image = img_info.image_data;
 
 
@@ -164,13 +163,13 @@ int main(int argc, char **argv)
 
 	std::cout << "Starting tracking" << std::endl;
 	while (!rgb_image.empty())
-	{	
-
+	{
 		fps_tracker.AddFrame();
+		// Chequear si va
+		
 		// auto now = std::chrono::system_clock::now();
 		// std::time_t now_time = std::chrono::system_clock::to_time_t(now);
 		// std::cout << "Timestamp actual: " << std::ctime(&now_time);
-
 
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, false, false,
 			rabbit_reader.fx, rabbit_reader.fy, rabbit_reader.cx, rabbit_reader.cy);
@@ -249,10 +248,8 @@ int main(int argc, char **argv)
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
 
-
 			std::vector<std::pair<std::string, double>> au_intensities = face_analyser.GetCurrentAUsReg();
 			std::vector<std::pair<std::string, double>> au_occurences = face_analyser.GetCurrentAUsClass();
-			
 			
 			json output_json;
 			json& action_units = output_json["ActionUnit"];
@@ -269,13 +266,20 @@ int main(int argc, char **argv)
 			// std::cout << "arousal: " << arousal << std::endl;
 			output_json["arousal"] = arousal;
 			
+			// std::cout << output_json.dump() << std::endl;	
+			rabbit_reader.ProcessReply(img_info.frame_id, output_json);
 			
-			// std::cout << output_json.dump() << std::endl;
-				
-			rabbit_reader.ProcessReply(frame_id, output_json);
-
 			img_info = rabbit_reader.GetNextImage();
-			frame_id = img_info.frame_id;
+			int frame_id_int = std::stoi(img_info.frame_id);
+			int batch_len = rabbit_reader.batch_len;
+			while (frame_id_int != 0 && frame_id_int != batch_len / 2){
+				rabbit_reader.ProcessReply(img_info.frame_id, output_json);
+				fps_tracker.AddFrame();
+
+				img_info = rabbit_reader.GetNextImage();
+				frame_id_int = std::stoi(img_info.frame_id);
+				batch_len = rabbit_reader.batch_len;
+			}
 			rgb_image = img_info.image_data;
 			std::cout << "FPS: " << fps_tracker.GetFPS() << std::endl;
 		}

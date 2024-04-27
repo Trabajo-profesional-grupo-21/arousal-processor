@@ -53,21 +53,36 @@ std::cout << "Warning: " << stream << std::endl
 std::cout << "Error: " << stream << std::endl
 
 
+std::string getEnvVar( std::string const & key ){
+    char * val = getenv( key.c_str() );
+    return val == NULL ? std::string("") : std::string(val);
+}
 
 
 RabbitCapture::RabbitCapture(){
+
+	std::string remote_rabbit = getEnvVar("REMOTE_RABBIT");
+
+
 	std::string queue_name = "arousal_frames";
 	std::string output_queue_name = "processed";
-	std::string connection_name = "rabbitmq";
 	std::string exchange_name = "frames";
 
 	latest_frame = cv::Mat();
 	latest_gray_frame = cv::Mat();
 
 	try {
-		// connection = AmqpClient::Channel::Create(connection_name);
-		// connection = AmqpClient::Channel::Create("rabbitmq-0.rabbitmq.default.svc.cluster.local", 5672);
-		connection = AmqpClient::Channel::Create("moose.rmq.cloudamqp.com", 5672, "zacfsxvy", "zfCu8hS9snVGmySGhtvIVeMi6uvYssih", "zacfsxvy");
+		if (remote_rabbit.length() > 0){
+			std::string host = getEnvVar("REMOTE_RABBIT");
+			int port = std::stoi(getEnvVar("RABBIT_PORT"));
+			std::string user = getEnvVar("RABBIT_USER");
+			std::string password = getEnvVar("RABBIT_PASSWORD");
+			std::string virtual_host = getEnvVar("RABBIT_VHOST");
+			connection = AmqpClient::Channel::Create(host, port, user, password, virtual_host);
+		} else {
+			// connection = AmqpClient::Channel::Create("rabbitmq-0.rabbitmq.default.svc.cluster.local", 5672);
+			connection = AmqpClient::Channel::Create("rabbitmq");
+		}
 
 		connection->DeclareExchange(exchange_name, AmqpClient::Channel::EXCHANGE_TYPE_FANOUT);
 
@@ -156,6 +171,7 @@ void RabbitCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
 }
 
 void RabbitCapture::ProcessReply(std::string frame_id, json img_processed){
+	img_processed["img_bytes"] = image_data;
 	current_replies[frame_id] = img_processed;
 	// std::cout << "frame id " << frame_id << "info " << img_processed << std::endl;
 	// std::cout << "Tamanio del current batch " << current_batch.size() << std::endl;
@@ -189,12 +205,14 @@ Image RabbitCapture::GetNextImage()
 		current_user_id = j["user_id"];
 		current_batch_id = j["batch_id"];
 		current_batch = j["batch"];
+
+		batch_len = current_batch.size();
 	}
 	// std::cout << "Tamb dict antes de sacar un farme " << current_batch.size() << std::endl;
 	auto it = current_batch.begin();
 	std::string frame_id = it->first; 
 	// std::cout << "frame que itero " << frame_id << std::endl;
-	std::vector<uchar> image_data = it->second;     
+	image_data = it->second;     
     current_batch.erase(it->first);
 	// std::cout << "Tamb dict despues de sacar uno frame " << current_batch.size() << std::endl;
 
