@@ -115,6 +115,8 @@ namespace Utilities
 
 		bool has_bounding_boxes;
 
+		int batch_len;
+
 	private:
 
 		// Blocking copy and move, as it doesn't make sense to have several readers pointed at the same source

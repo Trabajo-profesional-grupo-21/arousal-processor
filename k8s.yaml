@@ -23,6 +23,37 @@ spec:
         image: <IMAGE>
         command: ["./build/bin/FaceLandmarkImg", "-aus"]
         imagePullPolicy: IfNotPresent
+        env:
+          - name: RABBIT_HOST
+            valueFrom:
+              secretKeyRef:
+                name: rabbit-credentials
+                key: RABBIT_HOST
+          - name: RABBIT_PORT
+            valueFrom:
+              secretKeyRef:
+                name: rabbit-credentials
+                key: RABBIT_PORT
+          - name: RABBIT_VHOST
+            valueFrom:
+              secretKeyRef:
+                name: rabbit-credentials
+                key: RABBIT_VHOST
+          - name: RABBIT_USER
+            valueFrom:
+              secretKeyRef:
+                name: rabbit-credentials
+                key: RABBIT_USER
+          - name: RABBIT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: rabbit-credentials
+                key: RABBIT_PASSWORD
+          - name: REMOTE_RABBIT
+            valueFrom:
+              secretKeyRef:
+                name: rabbit-credentials
+                key: REMOTE_RABBIT
         resources:
           limits:
             memory: "1000Mi" # Límite máximo de uso de memoria
