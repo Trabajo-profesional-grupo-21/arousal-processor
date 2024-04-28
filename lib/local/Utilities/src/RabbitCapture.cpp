@@ -79,7 +79,8 @@ RabbitCapture::RabbitCapture(){
 			connection = AmqpClient::Channel::Create(host, port, user, password, virtual_host);
 		} else {
 			// connection = AmqpClient::Channel::Create("rabbitmq-0.rabbitmq.default.svc.cluster.local", 5672);
-			connection = AmqpClient::Channel::Create("rabbitmq");
+			// connection = AmqpClient::Channel::Create("rabbitmq");
+			connection = AmqpClient::Channel::Create("localhost");
 		}
 
 		connection->DeclareExchange(exchange_name, AmqpClient::Channel::EXCHANGE_TYPE_FANOUT);
@@ -192,7 +193,7 @@ void RabbitCapture::ProcessReply(std::string frame_id, json img_processed){
 Image RabbitCapture::GetNextImage()
 {	
 	Image current_image;
-	if (current_batch.empty()){
+	while (current_batch.empty()){
 		AmqpClient::Envelope::ptr_t envelope;
 
 		connection->BasicConsumeMessage(consumer_tag, envelope);
@@ -200,11 +201,17 @@ Image RabbitCapture::GetNextImage()
 		std::string message_body = envelope->Message()->Body();
 
 		json j = json::parse(message_body);
-		current_user_id = j["user_id"];
-		current_batch_id = j["batch_id"];
-		current_batch = j["batch"];
 
-		batch_len = current_batch.size();
+		if (j.contains("EOF")) {
+			connection->BasicPublish("", output_queue, AmqpClient::BasicMessage::Create(message_body));
+
+		}else{
+			current_user_id = j["user_id"];
+			current_batch_id = j["batch_id"];
+			current_batch = j["batch"];
+
+			batch_len = current_batch.size();
+		}
 	}
 	// std::cout << "Tamb dict antes de sacar un farme " << current_batch.size() << std::endl;
 	auto it = current_batch.begin();
