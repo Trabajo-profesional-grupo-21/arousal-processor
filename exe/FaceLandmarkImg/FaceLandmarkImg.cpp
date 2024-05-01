@@ -215,6 +215,7 @@ int main(int argc, char **argv)
 
 		// Detect landmarks around detected faces
 		int face_det = 0;
+		json output_json;
 		// perform landmark detection for every face detected
 		for (size_t face = 0; face < face_detections.size(); ++face)
 		{
@@ -253,8 +254,6 @@ int main(int argc, char **argv)
 			std::vector<std::pair<std::string, double>> au_intensities = face_analyser.GetCurrentAUsReg();
 			std::vector<std::pair<std::string, double>> au_occurences = face_analyser.GetCurrentAUsClass();
 			
-			
-			json output_json;
 			json& action_units = output_json["ActionUnit"];
 
 			for (size_t i = 0; i < au_intensities.size(); ++i) {
@@ -271,14 +270,14 @@ int main(int argc, char **argv)
 			
 			
 			// std::cout << output_json.dump() << std::endl;
-				
-			rabbit_reader.ProcessReply(frame_id, output_json);
+		}	
+		rabbit_reader.ProcessReply(frame_id, output_json);
 
-			img_info = rabbit_reader.GetNextImage();
-			frame_id = img_info.frame_id;
-			rgb_image = img_info.image_data;
-			std::cout << "FPS: " << fps_tracker.GetFPS() << std::endl;
-		}
+		img_info = rabbit_reader.GetNextImage();
+		frame_id = img_info.frame_id;
+		rgb_image = img_info.image_data;
+		std::cout << "FPS: " << fps_tracker.GetFPS() << std::endl;
+		
 	}
 	return 0;
 }
