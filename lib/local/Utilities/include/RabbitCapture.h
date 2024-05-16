@@ -153,6 +153,7 @@ namespace Utilities
 
 		std::string current_user_id;
 		std::string current_batch_id;
+		std::string current_batch_type;
 		std::map<std::string,json> current_replies;
 	};
 }

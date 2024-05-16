@@ -171,15 +171,20 @@ void RabbitCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
 
 void RabbitCapture::ProcessReply(std::string frame_id, json img_processed){
 	current_replies[frame_id] = img_processed;
-	// std::cout << "frame id " << frame_id << "info " << img_processed << std::endl;
-	// std::cout << "Tamanio del current batch " << current_batch.size() << std::endl;
 	
 	if (current_batch.empty()){
 		json output_json;
+		
 		output_json["user_id"] = current_user_id;
-		output_json["batch_id"] = current_batch_id;
-		output_json["replies"] = current_replies;
 		output_json["origin"] = "arousal";
+
+		if (current_batch_type == "video"){
+			output_json["batch_id"] = current_batch_id;
+			output_json["replies"] = current_replies;
+		}else{
+			output_json["img_name"] = current_batch_id;
+			output_json["reply"] = current_replies;
+		}
 
 		current_replies.clear();
 
@@ -203,11 +208,18 @@ Image RabbitCapture::GetNextImage()
 
 		if (j.contains("EOF")) {
 			connection->BasicPublish("", output_queue, AmqpClient::BasicMessage::Create(message_body));
+		} else if (j.contains("img")){
+			current_user_id = j["user_id"];
+			current_batch_id = j["img_name"];
+			current_batch = j["img"];
+			current_batch_type = "img";
 
-		}else{
+			batch_len = 1;
+		} else{
 			current_user_id = j["user_id"];
 			current_batch_id = j["batch_id"];
 			current_batch = j["batch"];
+			current_batch_type = "video";
 
 			batch_len = current_batch.size();
 		}
@@ -225,7 +237,6 @@ Image RabbitCapture::GetNextImage()
 	// current_batch.pop_front();
 
 	latest_frame = cv::imdecode(image_data, cv::IMREAD_COLOR);
-
 	image_height = latest_frame.size().height;
 	image_width = latest_frame.size().width;
 
