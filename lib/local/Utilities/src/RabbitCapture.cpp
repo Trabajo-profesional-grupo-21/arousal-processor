@@ -52,10 +52,15 @@ std::cout << "Warning: " << stream << std::endl
 #define ERROR_STREAM( stream ) \
 std::cout << "Error: " << stream << std::endl
 
-
-
+std::string getEnvVar( std::string const & key ){
+    char * val = getenv( key.c_str() );
+    return val == NULL ? std::string("") : std::string(val);
+}
 
 RabbitCapture::RabbitCapture(){
+
+	std::string remote_rabbit = getEnvVar("REMOTE_RABBIT");
+
 	std::string queue_name = "arousal_frames";
 	std::string output_queue_name = "processed";
 	std::string connection_name = "rabbitmq";
@@ -65,9 +70,18 @@ RabbitCapture::RabbitCapture(){
 	latest_gray_frame = cv::Mat();
 
 	try {
-		connection = AmqpClient::Channel::Create(connection_name);
-		// connection = AmqpClient::Channel::Create("rabbitmq-0.rabbitmq.default.svc.cluster.local", 5672);
-		// connection = AmqpClient::Channel::Create("moose.rmq.cloudamqp.com", 5672, "zacfsxvy", "zfCu8hS9snVGmySGhtvIVeMi6uvYssih", "zacfsxvy");
+		if (remote_rabbit.length() > 0){
+			std::string host = getEnvVar("RABBIT_HOST");
+			int port = std::stoi(getEnvVar("RABBIT_PORT"));
+			std::string user = getEnvVar("RABBIT_USER");
+			std::string password = getEnvVar("RABBIT_PASSWORD");
+			std::string virtual_host = getEnvVar("RABBIT_VHOST");
+			connection = AmqpClient::Channel::Create(host, port, user, password, virtual_host);
+		} else {
+			// connection = AmqpClient::Channel::Create("rabbitmq-0.rabbitmq.default.svc.cluster.local", 5672);
+			connection = AmqpClient::Channel::Create("rabbitmq");
+			// connection = AmqpClient::Channel::Create("localhost");
+		}
 
 		connection->DeclareExchange(exchange_name, AmqpClient::Channel::EXCHANGE_TYPE_FANOUT);
 
@@ -157,15 +171,20 @@ void RabbitCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
 
 void RabbitCapture::ProcessReply(std::string frame_id, json img_processed){
 	current_replies[frame_id] = img_processed;
-	// std::cout << "frame id " << frame_id << "info " << img_processed << std::endl;
-	// std::cout << "Tamanio del current batch " << current_batch.size() << std::endl;
 	
 	if (current_batch.empty()){
 		json output_json;
+		
 		output_json["user_id"] = current_user_id;
-		output_json["batch_id"] = current_batch_id;
-		output_json["replies"] = current_replies;
 		output_json["origin"] = "arousal";
+
+		if (current_batch_type == "video"){
+			output_json["batch_id"] = current_batch_id;
+			output_json["replies"] = current_replies;
+		}else{
+			output_json["img_name"] = current_batch_id;
+			output_json["reply"] = current_replies;
+		}
 
 		current_replies.clear();
 
@@ -178,7 +197,7 @@ void RabbitCapture::ProcessReply(std::string frame_id, json img_processed){
 Image RabbitCapture::GetNextImage()
 {	
 	Image current_image;
-	if (current_batch.empty()){
+	while (current_batch.empty()){
 		AmqpClient::Envelope::ptr_t envelope;
 
 		connection->BasicConsumeMessage(consumer_tag, envelope);
@@ -186,9 +205,24 @@ Image RabbitCapture::GetNextImage()
 		std::string message_body = envelope->Message()->Body();
 
 		json j = json::parse(message_body);
-		current_user_id = j["user_id"];
-		current_batch_id = j["batch_id"];
-		current_batch = j["batch"];
+
+		if (j.contains("EOF")) {
+			connection->BasicPublish("", output_queue, AmqpClient::BasicMessage::Create(message_body));
+		} else if (j.contains("img")){
+			current_user_id = j["user_id"];
+			current_batch_id = j["img_name"];
+			current_batch = j["img"];
+			current_batch_type = "img";
+
+			batch_len = 1;
+		} else{
+			current_user_id = j["user_id"];
+			current_batch_id = j["batch_id"];
+			current_batch = j["batch"];
+			current_batch_type = "video";
+
+			batch_len = current_batch.size();
+		}
 	}
 	// std::cout << "Tamb dict antes de sacar un farme " << current_batch.size() << std::endl;
 	auto it = current_batch.begin();
@@ -203,7 +237,6 @@ Image RabbitCapture::GetNextImage()
 	// current_batch.pop_front();
 
 	latest_frame = cv::imdecode(image_data, cv::IMREAD_COLOR);
-
 	image_height = latest_frame.size().height;
 	image_width = latest_frame.size().width;
 

@@ -212,14 +212,14 @@ int main(int argc, char **argv)
 				LandmarkDetector::DetectFacesMTCNN(face_detections, rgb_image, face_detector_mtcnn, confidences);
 			}
 		}
-
 		// Detect landmarks around detected faces
 		int face_det = 0;
 		json output_json;
 		// perform landmark detection for every face detected
 		for (size_t face = 0; face < face_detections.size(); ++face)
 		{
-
+			// std::cout << "Frame: " << frame_id << std::endl;
+			// std::cout << "Caras detectadas: " << face_detections.size() << std::endl;
 			// if there are multiple detections go through them
 			bool success = LandmarkDetector::DetectLandmarksInImage(rgb_image, face_detections[face], face_model, det_parameters, grayscale_image);
 
@@ -270,13 +270,13 @@ int main(int argc, char **argv)
 			
 			
 			// std::cout << output_json.dump() << std::endl;
-		}	
+		}
 		rabbit_reader.ProcessReply(frame_id, output_json);
 
 		img_info = rabbit_reader.GetNextImage();
 		frame_id = img_info.frame_id;
 		rgb_image = img_info.image_data;
-		std::cout << "FPS: " << fps_tracker.GetFPS() << std::endl;
+		// std::cout << "FPS: " << fps_tracker.GetFPS() << std::endl;
 		
 	}
 	return 0;
