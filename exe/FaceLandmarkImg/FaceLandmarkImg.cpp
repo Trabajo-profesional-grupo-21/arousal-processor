@@ -280,6 +280,12 @@ int main(int argc, char **argv)
 			
 			// std::cout << output_json.dump() << std::endl;
 		}
+
+		if(face_detections.size() == 0){
+			output_json["arousal"] = "Missing Face";
+			output_json["ActionUnit"] = "Missing Face";
+		}
+
 		rabbit_reader.ProcessReply(frame_id, output_json);
 
 		img_info = rabbit_reader.GetNextImage();
