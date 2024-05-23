@@ -176,6 +176,8 @@ void RabbitCapture::ProcessReply(std::string frame_id, json img_processed){
 		json output_json;
 		
 		output_json["user_id"] = current_user_id;
+		output_json["file_name"] = current_file_name;
+		output_json["upload"] = current_upload;
 		output_json["origin"] = "arousal";
 
 		if (current_batch_type == "video"){
@@ -212,6 +214,8 @@ Image RabbitCapture::GetNextImage()
 			current_user_id = j["user_id"];
 			current_batch_id = j["img_name"];
 			current_batch = j["img"];
+			current_file_name = j["file_name"];
+			current_upload = j["upload"];
 			current_batch_type = "img";
 
 			batch_len = 1;
@@ -219,6 +223,8 @@ Image RabbitCapture::GetNextImage()
 			current_user_id = j["user_id"];
 			current_batch_id = j["batch_id"];
 			current_batch = j["batch"];
+			current_file_name = j["file_name"];
+			current_upload = j["upload"];
 			current_batch_type = "video";
 
 			batch_len = current_batch.size();
