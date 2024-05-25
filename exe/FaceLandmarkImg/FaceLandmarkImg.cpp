@@ -225,10 +225,12 @@ int main(int argc, char **argv)
 		int face_det = 0;
 		json output_json;
 		// perform landmark detection for every face detected
-		for (size_t face = 0; face < face_detections.size(); ++face)
-		{
-			// std::cout << "Frame: " << frame_id << std::endl;
-			// std::cout << "Caras detectadas: " << face_detections.size() << std::endl;
+
+		if(face_detections.size() == 0){
+			output_json["arousal"] = "Missing Face";
+			output_json["ActionUnit"] = "Missing Face";
+		}else{
+			size_t face = 0;
 			// if there are multiple detections go through them
 			bool success = LandmarkDetector::DetectLandmarksInImage(rgb_image, face_detections[face], face_model, det_parameters, grayscale_image);
 
@@ -276,14 +278,7 @@ int main(int argc, char **argv)
 			double arousal = calculate_arousal(au_intensities);
 			// std::cout << "arousal: " << arousal << std::endl;
 			output_json["arousal"] = arousal;
-			
-			
 			// std::cout << output_json.dump() << std::endl;
-		}
-
-		if(face_detections.size() == 0){
-			output_json["arousal"] = "Missing Face";
-			output_json["ActionUnit"] = "Missing Face";
 		}
 
 		rabbit_reader.ProcessReply(frame_id, output_json);
