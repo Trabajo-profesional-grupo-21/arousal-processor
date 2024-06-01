@@ -152,6 +152,8 @@ namespace Utilities
 		std::map<std::string, std::vector<uchar>> current_batch;
 
 		std::string current_user_id;
+		std::string current_file_name;
+		bool current_upload;
 		std::string current_batch_id;
 		std::string current_batch_type;
 		std::map<std::string,json> current_replies;
