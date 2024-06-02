@@ -57,11 +57,11 @@ using json = nlohmann::json;
 #endif
 #define TOP_INTENSITIES_AMOUNT 5
 
-double rescale_arousal(double value) {
+double rescale(double value, double min = -1.0) {
     double dataMin = 0.0;
     double dataMax = 5;
 
-    double newMin = -1.0;
+    double newMin = min;
     double newMax = 1.0;
     return (newMin + (newMax - newMin) * (value - dataMin) / (dataMax - dataMin));
 }
@@ -83,7 +83,7 @@ double calculate_arousal(std::vector<std::pair<std::string, double>> &au_intensi
 	//{"ActionUnit":[{"AUName":"AU01","Intensity":0.6393677665876463},{"AUName":"AU02","Intensity":0.0},{"AUName":"AU04","Intensity":0.0},{"AUName":"AU05","Intensity":0.06933280513717067},{"AUName":"AU06","Intensity":1.9017657678319653},{"AUName":"AU07","Intensity":2.137407390615198},{"AUName":"AU09","Intensity":0.0},{"AUName":"AU10","Intensity":2.88920207800761},{"AUName":"AU12","Intensity":2.608026953424237},{"AUName":"AU14","Intensity":2.271780912358205},{"AUName":"AU15","Intensity":0.49019558448372147},{"AUName":"AU17","Intensity":0.0},{"AUName":"AU20","Intensity":2.1307561516269664},{"AUName":"AU23","Intensity":0.0},{"AUName":"AU25","Intensity":2.2882124683240868},{"AUName":"AU26","Intensity":0.44641159993709495},{"AUName":"AU45","Intensity":0.0}]}
 	std::vector<double> intensities;
 	for (size_t i = 0; i < au_intensities.size(); ++i) {
-		intensities.push_back(rescale_arousal(au_intensities[i].second));
+		intensities.push_back(rescale(au_intensities[i].second));
 	}
 	sort(intensities.begin(), intensities.end(), std::greater<double>());
 
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
 			for (size_t i = 0; i < au_intensities.size(); ++i) {
 				json au_json;
 				au_json["AUName"] = au_intensities[i].first;
-				au_json["Intensity"] = au_intensities[i].second;
+				au_json["Intensity"] = rescale(au_intensities[i].second, 0.0);
 				action_units.push_back(au_json);
 			}
 			
