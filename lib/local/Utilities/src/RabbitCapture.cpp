@@ -39,7 +39,7 @@
 #include <typeinfo> 
 
 // #include <thread> // Para sleep
-// #include <chrono> // Para sleep
+#include <chrono> // Para sleep
 
 using namespace Utilities;
 
@@ -68,33 +68,46 @@ RabbitCapture::RabbitCapture(){
 
 	latest_frame = cv::Mat();
 	latest_gray_frame = cv::Mat();
+	
+	const int max_retries = 10;
+    const int delay_seconds = 5;
+    bool connected = false;
 
-	try {
-		if (remote_rabbit.length() > 0){
-			std::string host = getEnvVar("RABBIT_HOST");
-			int port = std::stoi(getEnvVar("RABBIT_PORT"));
-			std::string user = getEnvVar("RABBIT_USER");
-			std::string password = getEnvVar("RABBIT_PASSWORD");
-			std::string virtual_host = getEnvVar("RABBIT_VHOST");
-			connection = AmqpClient::Channel::Create(host, port, user, password, virtual_host);
-		} else {
-			// connection = AmqpClient::Channel::Create("rabbitmq-0.rabbitmq.default.svc.cluster.local", 5672);
-			connection = AmqpClient::Channel::Create("rabbitmq");
-			// connection = AmqpClient::Channel::Create("localhost");
+	for (int attempt = 0; attempt < max_retries && !connected; ++attempt) {
+		try {
+			if (remote_rabbit.length() > 0){
+				std::string host = getEnvVar("RABBIT_HOST");
+				int port = std::stoi(getEnvVar("RABBIT_PORT"));
+				std::string user = getEnvVar("RABBIT_USER");
+				std::string password = getEnvVar("RABBIT_PASSWORD");
+				std::string virtual_host = getEnvVar("RABBIT_VHOST");
+				connection = AmqpClient::Channel::Create(host, port, user, password, virtual_host);
+			} else {
+				connection = AmqpClient::Channel::Create("rabbitmq");
+				// connection = AmqpClient::Channel::Create("localhost");
+			}
+
+			connection->DeclareExchange(exchange_name, AmqpClient::Channel::EXCHANGE_TYPE_FANOUT);
+
+			input_queue_id = connection->DeclareQueue(queue_name, false, true, false, false); // TODO: REVISAR PARAMS
+			output_queue = connection->DeclareQueue(output_queue_name, false, true, false, false); // TODO: REVISAR PARAMS
+
+			connection->BindQueue(queue_name, exchange_name, "");
+
+			consumer_tag = connection->BasicConsume(queue_name, "", true, true, false, 1);
+			connected = true;
+            std::cout << "Connected to RabbitMQ" << std::endl;
+
+		} catch (const std::exception& e) {
+			std::cerr << "RabbitMQ connection attempt " << (attempt + 1) << " failed: " << e.what() << std::endl;
+            if (attempt < max_retries - 1) {
+                std::this_thread::sleep_for(std::chrono::seconds(delay_seconds));
+            } else {
+                std::cerr << "Error: Failed to connect to RabbitMQ server after multiple attempts." << std::endl;
+                throw std::runtime_error("Failed to connect to RabbitMQ server: " + std::string(e.what()));
+            }
 		}
-
-		connection->DeclareExchange(exchange_name, AmqpClient::Channel::EXCHANGE_TYPE_FANOUT);
-
-		input_queue_id = connection->DeclareQueue(queue_name, false, true, false, false); // TODO: REVISAR PARAMS
-		output_queue = connection->DeclareQueue(output_queue_name, false, true, false, false); // TODO: REVISAR PARAMS
-
-		connection->BindQueue(queue_name, exchange_name, "");
-
-		consumer_tag = connection->BasicConsume(queue_name, "", true, true, false, 1);
-	} catch (const std::exception& e) {
-        std::cerr << "Error: Failed to connect to RabbitMQ server. " << e.what() << std::endl;
-		throw std::runtime_error("Failed to connect to RabbitMQ server: " + std::string(e.what()));
-    }
+	}
 };
 
 bool RabbitCapture::Open(std::vector<std::string>& arguments)
