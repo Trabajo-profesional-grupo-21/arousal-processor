@@ -57,6 +57,26 @@ using json = nlohmann::json;
 #endif
 #define TOP_INTENSITIES_AMOUNT 5
 
+const std::vector<json> missing_face_au = {
+        {{"AUName", "AU01"}, {"Intensity", 0.0}},
+        {{"AUName", "AU02"}, {"Intensity", 0.0}},
+        {{"AUName", "AU04"}, {"Intensity", 0.0}},
+        {{"AUName", "AU05"}, {"Intensity", 0.0}},
+        {{"AUName", "AU06"}, {"Intensity", 0.0}},
+        {{"AUName", "AU07"}, {"Intensity", 0.0}},
+        {{"AUName", "AU09"}, {"Intensity", 0.0}},
+        {{"AUName", "AU10"}, {"Intensity", 0.0}},
+        {{"AUName", "AU12"}, {"Intensity", 0.0}},
+        {{"AUName", "AU14"}, {"Intensity", 0.0}},
+        {{"AUName", "AU15"}, {"Intensity", 0.0}},
+        {{"AUName", "AU17"}, {"Intensity", 0.0}},
+        {{"AUName", "AU20"}, {"Intensity", 0.0}},
+        {{"AUName", "AU23"}, {"Intensity", 0.0}},
+        {{"AUName", "AU25"}, {"Intensity", 0.0}},
+        {{"AUName", "AU26"}, {"Intensity", 0.0}},
+        {{"AUName", "AU45"}, {"Intensity", 0.0}}
+    };
+
 double rescale(double value, double min = -1.0) {
     double dataMin = 0.0;
     double dataMax = 5;
@@ -227,8 +247,8 @@ int main(int argc, char **argv)
 		// perform landmark detection for every face detected
 
 		if(face_detections.size() == 0){
-			output_json["arousal"] = "Missing Face";
-			output_json["ActionUnit"] = "Missing Face";
+			output_json["arousal"] = 0.000;
+			output_json["ActionUnit"] = missing_face_au;
 		}else{
 			size_t face = 0;
 			// if there are multiple detections go through them
